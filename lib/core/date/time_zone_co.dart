@@ -1,7 +1,9 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-// import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -11,27 +13,18 @@ class TimeZoneHelper {
       return;
     }
     tz.initializeTimeZones();
-    // final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
-    // tz.setLocalLocation(tz.getLocation(timeZoneName));
+    final currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    final location = tz.getLocation(currentTimeZone);
+    tz.setLocalLocation(location);
   }
 
-  static getCurrentMonth() {
-    return tz.TZDateTime.now(tz.local).month;
-  }
+  static getCurrentMonth() => tz.TZDateTime.now(tz.local).month;
 
-  static getCurrentYear() {
-    return tz.TZDateTime.now(tz.local).year;
-  }
+  static getCurrentYear() => tz.TZDateTime.now(tz.local).year;
 
-  static getCurrentDay() {
-    return tz.TZDateTime.now(tz.local).day;
-  }
+  static getCurrentDay() => tz.TZDateTime.now(tz.local).day;
 
-  static setTime({
-    required int hour,
-    required int minute,
-    required int second,
-  }) {
+  static setTime(int hour, int minute, int second) {
     return tz.TZDateTime.utc(
       getCurrentYear(),
       getCurrentMonth(),

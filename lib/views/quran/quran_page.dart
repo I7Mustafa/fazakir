@@ -275,13 +275,12 @@ class _QuranPageScreanState extends State<QuranPageScrean> {
                                                 alignment: Alignment.topRight,
                                                 child: FittedBox(
                                                   child: Text(
-                                                      "الحزب " +
-                                                          getVerseEndSymbol(
+                                                      "الحزب ${getVerseEndSymbol(
                                                               int.parse(state
                                                                   .quranPageModel
                                                                   .page[index]
                                                                   .haz
-                                                                  .toString())),
+                                                                  .toString()))}",
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .bodyMedium),

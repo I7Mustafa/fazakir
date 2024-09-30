@@ -1,5 +1,7 @@
 import 'package:fazakir/bloc/azkar_cubit/azkar_cubit.dart';
+import 'package:fazakir/core/location/location.dart';
 import 'package:fazakir/features/prayer_time/domain/use_case/prayer_times_calculations.dart';
+import 'package:fazakir/nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -18,24 +20,21 @@ import 'myobserver.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await di.init();
 
   await NotificationService.init();
+  await Location.getPosition();
   await HiveHelper.init();
   await TimeZoneHelper.configureLocalTimeZone();
 
-  await di.init();
-
-  final initialRoute = await NotificationService.decideWhichRouteToLunch();
   await PrayerTimesCalculations().setNotificationAdhansOfTheDay();
 
   Bloc.observer = MyObserver();
-  runApp(MyApp(initRoute: initialRoute));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key, required this.initRoute}) : super(key: key);
-
-  final String initRoute;
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +66,7 @@ class MyApp extends StatelessWidget {
             themeMode: BlocProvider.of<ThemeModeCubit>(context).state
                 ? ThemeMode.light
                 : ThemeMode.dark,
-            initialRoute: initRoute,
+            initialRoute: NavBar.routeName,
             onGenerateRoute: RouteConfig(context).generateRoute,
           );
         },

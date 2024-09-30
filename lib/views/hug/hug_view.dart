@@ -60,9 +60,7 @@ class HugView extends StatelessWidget {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            state.hugModel.hugData[index].name
-                                                    .toString() +
-                                                "\n",
+                                            "${state.hugModel.hugData[index].name}\n",
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .titleLarge,
@@ -74,7 +72,7 @@ class HugView extends StatelessWidget {
                                               ...state
                                                   .hugModel.hugData[index].info!
                                                   .map((e) => Text(
-                                                        e + "\n",
+                                                        "$e\n",
                                                         style: Theme.of(context)
                                                             .textTheme
                                                             .bodyMedium,

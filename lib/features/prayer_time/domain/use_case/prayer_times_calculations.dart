@@ -49,7 +49,7 @@ class PrayerTimesCalculations {
 
   Future setNotificationAdhansOfTheDay() async {
     final adhansTimes = await getAdhansOfTheDay();
-    NotificationService().sendScheduleNotification(
+    NotificationService.sendScheduleNotification(
       id: adhansTimes.fajr.hashCode,
       title: "أذان الفجر",
       body: adhansTimes.fajr.toString(),
@@ -57,7 +57,7 @@ class PrayerTimesCalculations {
       minute: adhansTimes.fajr.minute,
       second: adhansTimes.fajr.second,
     );
-    NotificationService().sendScheduleNotification(
+    NotificationService.sendScheduleNotification(
       id: adhansTimes.sunrise.hashCode,
       title: "أذان الشروق",
       body: adhansTimes.sunrise.toString(),
@@ -65,7 +65,7 @@ class PrayerTimesCalculations {
       minute: adhansTimes.sunrise.minute,
       second: adhansTimes.sunrise.second,
     );
-    NotificationService().sendScheduleNotification(
+    NotificationService.sendScheduleNotification(
       id: adhansTimes.dhuhr.hashCode,
       title: "أذان الظهر",
       body: adhansTimes.dhuhr.toString(),
@@ -73,7 +73,7 @@ class PrayerTimesCalculations {
       minute: adhansTimes.dhuhr.minute,
       second: adhansTimes.dhuhr.second,
     );
-    NotificationService().sendScheduleNotification(
+    NotificationService.sendScheduleNotification(
       id: adhansTimes.asr.hashCode,
       title: "أذان العصر",
       body: adhansTimes.asr.toString(),
@@ -81,7 +81,7 @@ class PrayerTimesCalculations {
       minute: adhansTimes.asr.minute,
       second: adhansTimes.asr.second,
     );
-    NotificationService().sendScheduleNotification(
+    NotificationService.sendScheduleNotification(
       id: adhansTimes.maghrib.hashCode,
       title: "أذان المغرب",
       body: adhansTimes.maghrib.toString(),
@@ -89,7 +89,7 @@ class PrayerTimesCalculations {
       minute: adhansTimes.maghrib.minute,
       second: adhansTimes.maghrib.second,
     );
-    NotificationService().sendScheduleNotification(
+    NotificationService.sendScheduleNotification(
       id: adhansTimes.isha.hashCode,
       title: "أذان العشاء",
       body: adhansTimes.isha.toString(),

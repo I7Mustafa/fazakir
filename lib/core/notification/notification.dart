@@ -3,175 +3,101 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
 
 import '../../models/received_notification/received_notification.dart';
-import '../../nav_bar.dart';
 import '../date/time_zone_co.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
-
-/// Streams are created so that app can respond to notification-related events
-/// since the plugin is initialized in the `main` function
-final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
-    StreamController<ReceivedNotification>.broadcast();
-
-final StreamController<String?> selectNotificationStream =
-    StreamController<String?>.broadcast();
-
-const MethodChannel platform = MethodChannel(
-  'dexterx.dev/flutter_local_notifications_example',
-);
-
-String? selectedNotificationPayload;
-
-/// A notification action which triggers a url launch event
-const String urlLaunchActionId = 'id_1';
-
-/// A notification action which triggers a App navigation event
-const String navigationActionId = 'id_3';
-
-const adahnNotificationChannel = "Adahn Channel";
-const adahnNotificationChannelName = "Adahn Channel";
-const adahnNotificationChannelDescription =
-    "Adahn Channel that used to send a notification every adhan";
-
 class NotificationService {
-  @pragma('vm:entry-point')
-  static void notificationTapBackground(
-      NotificationResponse notificationResponse) {
-    // ignore: avoid_print
-    log('notification(${notificationResponse.id}) action tapped: '
-        '${notificationResponse.actionId} with'
-        ' payload: ${notificationResponse.payload}');
-    if (notificationResponse.input?.isNotEmpty ?? false) {
-      // ignore: avoid_print
-      log('notification action tapped with input: ${notificationResponse.input}');
-    }
-  }
+  static final _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  static Future init() async {
-    const initializationSettingsAndroid =
-        AndroidInitializationSettings('launcher_icon');
+  static final _didReceiveNotificationStream =
+      StreamController<ReceivedNotification>.broadcast();
 
-    await requestNotificationPermission();
+  static final _selectNotificationStream =
+      StreamController<String?>.broadcast();
 
-    /// Note: permissions aren't requested here just to demonstrate that can be
-    /// done later
-    final DarwinInitializationSettings initializationSettingsDarwin =
-        DarwinInitializationSettings(
-      onDidReceiveLocalNotification: (
-        int id,
-        String? title,
-        String? body,
-        String? payload,
-      ) async {
-        didReceiveLocalNotificationStream.add(
-          ReceivedNotification(
-            id: id,
-            title: title,
-            body: body,
-            payload: payload,
-          ),
-        );
-      },
+  static const String _navigationActionId = 'id_3';
+
+  static const String _adahnNotificationChannel = "Adahn Channel";
+  static const String _adahnNotificationChannelName = "Adahn Channel";
+  static const String _adahnNotificationChannelDescription =
+      "Adahn Channel that sends a notification for every adhan";
+
+  static Future<void> init() async {
+    const initializationSettingsAndroid = AndroidInitializationSettings(
+      'launcher_icon',
     );
-    final initializationSettingsLinux = LinuxInitializationSettings(
-      defaultActionName: 'Open notification',
-      defaultIcon: AssetsLinuxIcon('icons/app_icon.png'),
+
+    final initializationSettingsDarwin = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+      onDidReceiveLocalNotification: _onDidReceiveLocalNotification,
     );
+
     final initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsDarwin,
       macOS: initializationSettingsDarwin,
-      linux: initializationSettingsLinux,
     );
-    await flutterLocalNotificationsPlugin.initialize(
+
+    await _notificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
-      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+      onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
     );
+
+    await _requestNotificationPermission();
   }
 
-  static void onDidReceiveNotificationResponse(
-    NotificationResponse notificationResponse,
-  ) async {
-    final String? payload = notificationResponse.payload;
-    if (notificationResponse.payload != null) {
-      debugPrint('notification payload: $payload');
-    }
-    switch (notificationResponse.notificationResponseType) {
-      case NotificationResponseType.selectedNotification:
-        selectNotificationStream.add(notificationResponse.payload);
-        break;
-      case NotificationResponseType.selectedNotificationAction:
-        if (notificationResponse.actionId == navigationActionId) {
-          selectNotificationStream.add(notificationResponse.payload);
-        }
-        break;
-    }
-  }
-
-  static Future requestNotificationPermission() async {
+  static Future<void> _requestNotificationPermission() async {
     if (Platform.isIOS) {
-      await flutterLocalNotificationsPlugin
+      await _notificationsPlugin
           .resolvePlatformSpecificImplementation<
               IOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
-    }
-
-    if (Platform.isAndroid) {
-      flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()!
-          .requestNotificationsPermission();
-    }
-
-    if (Platform.isMacOS) {
-      await flutterLocalNotificationsPlugin
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+    } else if (Platform.isMacOS) {
+      await _notificationsPlugin
           .resolvePlatformSpecificImplementation<
               MacOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+    } else if (Platform.isAndroid) {
+      final androidPlugin =
+          _notificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      final notificationsGranted =
+          await androidPlugin?.requestNotificationsPermission();
+      final alarmsGranted = await androidPlugin?.requestExactAlarmsPermission();
+
+      if (notificationsGranted != true || alarmsGranted != true) {
+        log('Notification permissions not granted');
+      }
     }
   }
 
-  static Future<String> decideWhichRouteToLunch() async {
-    final NotificationAppLaunchDetails? notificationAppLaunchDetails;
-    if (!kIsWeb && Platform.isLinux) {
-      notificationAppLaunchDetails = null;
-    } else {
-      notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
-          .getNotificationAppLaunchDetails();
-    }
-
-    String initialRoute = NavBar.routeName;
-
-    if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
-      selectedNotificationPayload =
-          notificationAppLaunchDetails!.notificationResponse!.payload;
-    }
-    return initialRoute;
-  }
-
-  AndroidNotificationDetails androidNotificationDetails =
+  static AndroidNotificationDetails get _androidNotificationDetails =>
       const AndroidNotificationDetails(
-    adahnNotificationChannel,
-    adahnNotificationChannelName,
-    channelDescription: adahnNotificationChannelDescription,
-    importance: Importance.max,
-    priority: Priority.high,
-    playSound: true,
-    enableVibration: true,
-    visibility: NotificationVisibility.public,
-    channelShowBadge: true,
-    groupAlertBehavior: GroupAlertBehavior.all,
-    // sound: RawResourceAndroidNotificationSound('adhan'),
-  );
+        _adahnNotificationChannel,
+        _adahnNotificationChannelName,
+        channelDescription: _adahnNotificationChannelDescription,
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
+        visibility: NotificationVisibility.public,
+        channelShowBadge: true,
+        groupAlertBehavior: GroupAlertBehavior.all,
+      );
 
-  void sendScheduleNotification({
+  static Future<void> sendScheduleNotification({
     required int id,
     required String title,
     required String body,
@@ -179,16 +105,46 @@ class NotificationService {
     required int minute,
     required int second,
   }) async {
-    await flutterLocalNotificationsPlugin.zonedSchedule(
+    await _notificationsPlugin.zonedSchedule(
       id,
       title,
       body,
-      TimeZoneHelper.setTime(hour: hour, minute: minute, second: second),
-      NotificationDetails(android: androidNotificationDetails),
-      androidAllowWhileIdle: true,
+      TimeZoneHelper.setTime(hour, minute, second),
+      NotificationDetails(android: _androidNotificationDetails),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
     );
+  }
+
+  static void _onDidReceiveNotificationResponse(
+    NotificationResponse notificationResponse,
+  ) {
+    final String? payload = notificationResponse.payload;
+    if (payload != null) {
+      debugPrint('notification payload: $payload');
+    }
+    if (notificationResponse.notificationResponseType ==
+            NotificationResponseType.selectedNotification ||
+        (notificationResponse.notificationResponseType ==
+                NotificationResponseType.selectedNotificationAction &&
+            notificationResponse.actionId == _navigationActionId)) {
+      _selectNotificationStream.add(payload);
+    }
+  }
+
+  static void _onDidReceiveLocalNotification(
+    int id,
+    String? title,
+    String? body,
+    String? payload,
+  ) {
+    _didReceiveNotificationStream.add(ReceivedNotification(
+      id: id,
+      title: title,
+      body: body,
+      payload: payload,
+    ));
   }
 }

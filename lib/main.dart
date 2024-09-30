@@ -3,7 +3,6 @@ import 'package:fazakir/features/prayer_time/domain/use_case/prayer_times_calcul
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:wakelock/wakelock.dart';
 
 import 'bloc/quran_cubit/quran_cubit.dart';
 import 'bloc/save_quran_page_cubit/save_quran_page_cubit.dart';
@@ -20,7 +19,6 @@ import 'myobserver.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  Wakelock.enable();
   await NotificationService.init();
   await HiveHelper.init();
   await TimeZoneHelper.configureLocalTimeZone();

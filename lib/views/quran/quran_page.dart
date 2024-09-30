@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../bloc/quran_cubit/quran_cubit.dart';
 import '../../bloc/quran_cubit/quran_state.dart';
@@ -58,7 +58,7 @@ class _QuranPageScreanState extends State<QuranPageScrean> {
   void initState() {
     creindex = widget.index!;
     num = creindex.toDouble();
-    Wakelock.enable();
+    WakelockPlus.enable();
     BlocProvider.of<QuranCubit>(context).getpage();
     pageController = PageController(
       initialPage: creindex,
@@ -69,7 +69,7 @@ class _QuranPageScreanState extends State<QuranPageScrean> {
 
   @override
   void dispose() {
-    Wakelock.disable();
+    WakelockPlus.disable();
     super.dispose();
   }
 

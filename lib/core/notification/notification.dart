@@ -54,9 +54,8 @@ class NotificationService {
   }
 
   static Future init() async {
-    const initializationSettingsAndroid = AndroidInitializationSettings(
-      'app_icon',
-    );
+    const initializationSettingsAndroid =
+        AndroidInitializationSettings('launcher_icon');
 
     await requestNotificationPermission();
 
@@ -128,7 +127,7 @@ class NotificationService {
       flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()!
-          .requestPermission();
+          .requestNotificationsPermission();
     }
 
     if (Platform.isMacOS) {
